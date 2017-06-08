@@ -4,6 +4,11 @@ const Fiat = require('./lib/Fiat')
 
 let bot = new Bot()
 
+const OPTIONS = {
+  GETIT: 'getit',
+  NAH: 'nah'
+}
+
 // ROUTING
 
 bot.onEvent = function(session, message) {
@@ -32,11 +37,11 @@ function onMessage(session, message) {
 
 function onCommand(session, command) {
   switch (command.content.value) {
-    case 'ping':
-      pong(session)
+    case OPTIONS.GETIT:
+      getit(session)
       break
-    case 'count':
-      count(session)
+    case OPTIONS.NAH:
+      nah(session)
       break
     case 'donate':
       donate(session)
@@ -69,7 +74,15 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hello Token!`)
+  sendMessage(session, `What's good homie! Let's make some 💰 Ya feel me?`)
+}
+
+function getit(session) {
+  sendMessage(session, `Ok, you got me. I do nothing right now 😆`)
+}
+
+function nah(session) {
+  sendMessage(session, `Seriously... Get off your ass. We're gonna make dough 🤑`)
 }
 
 function pong(session) {
@@ -94,9 +107,8 @@ function donate(session) {
 
 function sendMessage(session, message) {
   let controls = [
-    {type: 'button', label: 'Ping', value: 'ping'},
-    {type: 'button', label: 'Count', value: 'count'},
-    {type: 'button', label: 'Donate', value: 'donate'}
+    {type: 'button', label: `Let's get it`, value: OPTIONS.GETIT},
+    {type: 'button', label: 'Nah', value: OPTIONS.NAH}
   ]
   session.reply(SOFA.Message({
     body: message,
