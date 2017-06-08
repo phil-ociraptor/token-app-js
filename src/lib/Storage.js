@@ -102,6 +102,25 @@ class PSQLStore {
     });
   }
 
+  storeAnswerForUser(address, questionId, answer) {
+    let query = `INSERT INTO answers (
+                    created_date, eth_address, question_id, is_yes
+                 ) VALUES (
+                    now(), $1, $2, $3
+                 )`;
+    return new Promise((fulfill, reject) => {
+      this._execute(query, [address, questionId, answer], (err, result) => {
+        if (err) {
+            Logger.error(err);
+            reject(err);
+        } else {
+            console.log("Successfully inserted rows");
+            fulfill();
+        }
+      })
+    });
+  }
+
   getUnansweredQuestionsForAddress(address) {
     let query = `SELECT * FROM questions
                  WHERE id NOT IN (

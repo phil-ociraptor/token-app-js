@@ -28,7 +28,7 @@ bot.onEvent = function(session, message) {
 }
 
 function onMessage(session, message) {
-  session.bot.client.store.getUnansweredQuestionsForAddress("woo").then((res) => {
+  session.bot.client.store.getUnansweredQuestionsForAddress(session.address).then((res) => {
       if (res.length > 0) {
           let controls = [
             {type: 'button', label: 'Yes', value: "" + res[0].id + ":1" },
@@ -53,6 +53,38 @@ function onCommand(session, command) {
 
         let answerVal = parseInt(splitted[1]);
         let answer = answerVal == 1;
+
+        // Store response for question
+        session.bot.client.store.storeAnswerForUser(
+            session.address,
+            questionId,
+            answer
+        ).then(() => {
+
+            // Try to fetch another question to ask them
+            session.bot.client.store.getUnansweredQuestionsForAddress(session.address).then((rows) => {
+
+               // Based on availability, write next message
+               if (rows.length > 0) {
+                   session.reply("Fantastic! Here is another question for you:");
+                   let controls = [
+                     {type: 'button', label: 'Yes', value: "" + rows[0].id + ":1" },
+                     {type: 'button', label: 'No', value: "" + rows[0].id + ":0"}
+                   ];
+                   session.reply(SOFA.Message({
+                     body: rows[0].body,
+                     controls: controls,
+                     showKeyboard: false,
+                   }));
+               } else {
+                   session.reply("Sorry! you voted all messages");
+               }
+            })
+        });
+
+
+
+
         if (answer == true) {
             console.log("Question " + questionId + " was replied with TRUE");
         } else {
