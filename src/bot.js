@@ -7,6 +7,7 @@ let bot = new Bot()
 // ROUTING
 
 bot.onEvent = function(session, message) {
+  console.log(message.type);
   switch (message.type) {
     case 'Init':
       welcome(session)
@@ -27,20 +28,48 @@ bot.onEvent = function(session, message) {
 }
 
 function onMessage(session, message) {
-  welcome(session)
+  session.bot.client.store.getUnansweredQuestionsForAddress("woo").then((res) => {
+      if (res.length > 0) {
+          let controls = [
+            {type: 'button', label: 'Yes', value: "" + res[0].id + ":1" },
+            {type: 'button', label: 'No', value: "" + res[0].id + ":0"}
+          ];
+          session.reply(SOFA.Message({
+            body: res[0].body,
+            controls: controls,
+            showKeyboard: false,
+          }));
+      } else {
+          session.reply("Sorry! you voted all messages");
+      }
+  })
 }
 
 function onCommand(session, command) {
-  switch (command.content.value) {
-    case 'ping':
-      pong(session)
-      break
-    case 'count':
-      count(session)
-      break
-    case 'donate':
-      donate(session)
-      break
+    let val = command.content.value;
+    if (val.indexOf(":") != -1) {
+        let splitted = val.split(":");
+        let questionId = parseInt(splitted[0]);
+
+        let answerVal = parseInt(splitted[1]);
+        let answer = answerVal == 1;
+        if (answer == true) {
+            console.log("Question " + questionId + " was replied with TRUE");
+        } else {
+            console.log("Question " + questionId + " was replied with FALSE");
+        }
+    } else {
+        switch (command.content.value) {
+          case 'ping':
+            pong(session)
+            break
+          case 'count':
+            count(session)
+            break
+          case 'donate':
+            donate(session)
+            break
+        }
     }
 }
 
