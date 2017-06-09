@@ -1,6 +1,8 @@
 const Bot = require('./lib/Bot')
 const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat')
+const util = require('util')
+const setTimeoutPromise = util.promisify(setTimeout);
 
 let bot = new Bot()
 
@@ -28,20 +30,53 @@ bot.onEvent = function(session, message) {
 }
 
 function onMessage(session, message) {
-  session.bot.client.store.getUnansweredQuestionsForAddress(session.address).then((res) => {
-      if (res.length > 0) {
-          let controls = [
-            {type: 'button', label: 'Yes', value: "" + res[0].id + ":1" },
-            {type: 'button', label: 'No', value: "" + res[0].id + ":0"}
-          ];
-          session.reply(SOFA.Message({
-            body: res[0].body,
-            controls: controls,
-            showKeyboard: false,
-          }));
-      } else {
-          session.reply("Sorry! you voted all messages");
-      }
+  firstTimeMessage(session)
+    .then(() => {
+      session.bot.client.store.getUnansweredQuestionsForAddress(session.address).then((res) => {
+          if (res.length > 0) {
+              let controls = [
+                {type: 'button', label: 'Yes', value: "" + res[0].id + ":1" },
+                {type: 'button', label: 'No', value: "" + res[0].id + ":0"}
+              ];
+              session.reply(SOFA.Message({
+                body: res[0].body,
+                controls: controls,
+                showKeyboard: false,
+              }));
+          } else {
+              session.reply("There are no new questions");
+          }
+      });
+    });
+
+}
+
+function firstTimeMessage(session) {
+  if (session.get("isNew") === undefined) {
+    session.set("isNew", false);
+    return delayedMessage(session, "Welcome to Pontifex, where you answer questions for Ether. Compete with your friends, keep track of your record and 🔮 your way into tons of Ether!", 100)
+      .then(() => {
+        return delayedMessage(session,
+          "👉  Rules of Play: \n" +
+          " - 5 questions per week. (More since this is the first week!) \n" +
+          " - No time limit, get them right! \n" +
+          " - Collect Participation Prize -- a lil Ether (after every question) \n" +
+          " - MAJOR 🔑 :  When events resolve, if correct win beaucoup Ether 💰 \n" +
+          " - Compete with your friends and around the 🌏 \n" +
+          " - The more you get right, the more you get paid 😎"
+          , 5000);
+      })
+      .then(() => {
+        return delayedMessage(session, "Let's jump right into it", 5000);
+      });
+  } else {
+    return Promise.resolve();
+  }
+}
+
+function delayedMessage(session, text, delayInMS) {
+  return setTimeoutPromise(delayInMS).then(() => {
+    session.reply(text);
   })
 }
 
@@ -60,13 +95,17 @@ function onCommand(session, command) {
             questionId,
             answer
         ).then(() => {
+          session.reply("Alright then, we shall see! Have some 🏆 💸 and on to the 𝓝𝓮𝒙𝓽--");
+          return sendMoney(session, 0.5);
+        })
+        .then(() => {
 
             // Try to fetch another question to ask them
             session.bot.client.store.getUnansweredQuestionsForAddress(session.address).then((rows) => {
 
                // Based on availability, write next message
                if (rows.length > 0) {
-                   session.reply("Fantastic! Here is another question for you:");
+                   session.reply("Here is another question for you:");
                    let controls = [
                      {type: 'button', label: 'Yes', value: "" + rows[0].id + ":1" },
                      {type: 'button', label: 'No', value: "" + rows[0].id + ":0"}
@@ -77,13 +116,10 @@ function onCommand(session, command) {
                      showKeyboard: false,
                    }));
                } else {
-                   session.reply("Sorry! you voted all messages");
+                   session.reply("That's all for now folks!");
                }
             })
         });
-
-
-
 
         if (answer == true) {
             console.log("Question " + questionId + " was replied with TRUE");
@@ -130,7 +166,7 @@ function onPayment(session, message) {
 // STATES
 
 function welcome(session) {
-  sendMessage(session, `Hello Token!`)
+  sendMessage(session, `Woah!  Ready for the future? 😝`)
 }
 
 function pong(session) {
@@ -148,6 +184,12 @@ function donate(session) {
   // request $1 USD at current exchange rates
   Fiat.fetch().then((toEth) => {
     session.requestEth(toEth.USD(1))
+  })
+}
+
+function sendMoney(session, dollars) {
+  return Fiat.fetch().then((toEth) => {
+    session.sendEth(toEth.USD(dollars))
   })
 }
 
