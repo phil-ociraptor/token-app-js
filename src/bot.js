@@ -111,7 +111,6 @@ function onCommand(session, command) {
 
                // Based on availability, write next message
                if (rows.length > 0) {
-                   session.reply("Here is another question for you:");
                    let controls = [
                      {type: 'button', label: 'Yes', value: "" + rows[0].id + ":1" },
                      {type: 'button', label: 'No', value: "" + rows[0].id + ":0"}
