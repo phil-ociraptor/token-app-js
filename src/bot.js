@@ -1,8 +1,6 @@
 const Bot = require('./lib/Bot')
 const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat')
-const util = require('util')
-const setTimeoutPromise = util.promisify(setTimeout);
 
 let bot = new Bot()
 
@@ -80,9 +78,12 @@ function firstTimeMessage(session) {
 }
 
 function delayedMessage(session, text, delayInMS) {
-  return setTimeoutPromise(delayInMS).then(() => {
-    session.reply(text);
-  })
+  return new Promise((fulfill, reject) => {
+    setTimeout(() => {
+      session.reply(text);
+      fulfill();
+    }, delayInMS);
+  });
 }
 
 function onCommand(session, command) {
