@@ -6,6 +6,11 @@ const setTimeoutPromise = util.promisify(setTimeout);
 
 let bot = new Bot()
 
+const OPTIONS = {
+  GETIT: 'getit',
+  NAH: 'nah'
+}
+
 // ROUTING
 
 bot.onEvent = function(session, message) {
@@ -197,9 +202,8 @@ function sendMoney(session, dollars) {
 
 function sendMessage(session, message) {
   let controls = [
-    {type: 'button', label: 'Ping', value: 'ping'},
-    {type: 'button', label: 'Count', value: 'count'},
-    {type: 'button', label: 'Donate', value: 'donate'}
+    {type: 'button', label: `Let's get it`, value: OPTIONS.GETIT},
+    {type: 'button', label: 'Nah', value: OPTIONS.NAH}
   ]
   session.reply(SOFA.Message({
     body: message,
