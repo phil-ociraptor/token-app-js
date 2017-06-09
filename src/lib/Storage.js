@@ -15,6 +15,8 @@ class StorageInterface {
   // to the callback function provided
   loadBotSession(address) {}
 
+  getUnansweredQuestionsForAddress(address) {}
+
   // create a new, or update an existing bot seesion
   // for the given address.
   updateBotSession(address, data) {}
@@ -95,6 +97,46 @@ class PSQLStore {
           fulfill({
             address: address
           });
+        }
+      });
+    });
+  }
+
+  storeAnswerForUser(address, questionId, answer) {
+    let query = `INSERT INTO answers (
+                    created_date, eth_address, question_id, is_yes
+                 ) VALUES (
+                    now(), $1, $2, $3
+                 )`;
+    return new Promise((fulfill, reject) => {
+      this._execute(query, [address, questionId, answer], (err, result) => {
+        if (err) {
+            Logger.error(err);
+            reject(err);
+        } else {
+            console.log("Successfully inserted rows");
+            fulfill();
+        }
+      })
+    });
+  }
+
+  getUnansweredQuestionsForAddress(address) {
+    let query = `SELECT * FROM questions
+                 WHERE id NOT IN (
+                     SELECT question_id FROM answers
+                     WHERE eth_address = $1
+                 ) AND created_date >=  (now() - interval '1 week')::date
+                 ORDER BY created_date ASC`;
+
+    return new Promise((fulfill, reject) => {
+      this._execute(query, [address], (err, result) => {
+        if (err) {
+            Logger.error(err);
+            reject(err);
+        } else {
+            console.log("Successfully fetched rows");
+            fulfill(result.rows);
         }
       });
     });
