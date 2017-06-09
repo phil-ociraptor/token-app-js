@@ -95,7 +95,7 @@ function onCommand(session, command) {
             questionId,
             answer
         ).then(() => {
-          session.reply("Alright then, we shall see! Have some 🏆 💸 and on to the 𝓝𝓮𝒙𝓽--");
+          session.reply("Alright then, we shall see! Have some 🏆 💸 and on to the next--");
           return sendMoney(session, 0.5);
         })
         .then(() => {

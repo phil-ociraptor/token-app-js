@@ -127,7 +127,7 @@ class PSQLStore {
                      SELECT question_id FROM answers
                      WHERE eth_address = $1
                  ) AND created_date >=  (now() - interval '1 week')::date
-                 ORDER BY created_date DESC`;
+                 ORDER BY created_date ASC`;
 
     return new Promise((fulfill, reject) => {
       this._execute(query, [address], (err, result) => {
